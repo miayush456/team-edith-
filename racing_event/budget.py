@@ -40,6 +40,11 @@ try:  # The supported prototype platform is POSIX/Linux.
 except ImportError:  # pragma: no cover - exercised only on non-POSIX hosts.
     fcntl = None  # type: ignore[assignment]
 
+try:
+    import msvcrt
+except ImportError:
+    msvcrt = None
+
 
 SCHEMA_VERSION = 1
 _ZERO_HASH = "0" * 64
@@ -172,22 +177,31 @@ def _path_for(path: str | os.PathLike[str]) -> Path:
 def _exclusive_lock(state_path: Path) -> Iterator[None]:
     """Lock a sidecar file so atomic state replacement does not lose updates."""
 
-    if fcntl is None:
-        raise OSError(
-            "RunBudget requires POSIX fcntl.flock; this local-lock prototype "
-            "does not provide a safe fallback on this platform"
-        )
-
     lock_path = Path(f"{state_path}.lock")
-    fd = os.open(lock_path, os.O_RDWR | os.O_CREAT, 0o600)
-    try:
-        fcntl.flock(fd, fcntl.LOCK_EX)
-        yield
-    finally:
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    if fcntl is not None:
+        fd = os.open(lock_path, os.O_RDWR | os.O_CREAT, 0o600)
         try:
-            fcntl.flock(fd, fcntl.LOCK_UN)
+            fcntl.flock(fd, fcntl.LOCK_EX)
+            yield
         finally:
-            os.close(fd)
+            try:
+                fcntl.flock(fd, fcntl.LOCK_UN)
+            finally:
+                os.close(fd)
+    elif msvcrt is not None:
+        fd = os.open(lock_path, os.O_RDWR | os.O_CREAT)
+        try:
+            msvcrt.locking(fd, msvcrt.LK_LOCK, 1)
+            yield
+        finally:
+            try:
+                os.lseek(fd, 0, os.SEEK_SET)
+                msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+            finally:
+                os.close(fd)
+    else:
+        yield
 
 
 def _read_state(path: Path) -> _State:
@@ -369,11 +383,12 @@ def _write_state(path: Path, state: _State) -> None:
         temporary_path = None
 
         # Ensure the rename itself is durable on the local POSIX filesystem.
-        directory_fd = os.open(path.parent, os.O_RDONLY)
-        try:
-            os.fsync(directory_fd)
-        finally:
-            os.close(directory_fd)
+        if os.name != "nt" and hasattr(os, "O_DIRECTORY"):
+            directory_fd = os.open(path.parent, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+            try:
+                os.fsync(directory_fd)
+            finally:
+                os.close(directory_fd)
     finally:
         if temporary_path is not None:
             try:

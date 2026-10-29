@@ -15,7 +15,15 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from dataclasses import fields
-import fcntl
+try:
+    import fcntl
+except ImportError:
+    fcntl = None
+
+try:
+    import msvcrt
+except ImportError:
+    msvcrt = None
 import hashlib
 import json
 import os
@@ -55,6 +63,8 @@ def sha256(path: Path) -> str:
 
 
 def fsync_dir(path: Path) -> None:
+    if os.name == "nt" or not hasattr(os, "O_DIRECTORY"):
+        return
     fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY)
     try:
         os.fsync(fd)
@@ -95,14 +105,30 @@ def writer_lock(output: Path) -> Iterator[None]:
     """Reject another writer for the entire invocation, including evaluation."""
     output.mkdir(parents=True, exist_ok=True)
     with (output / ".reference-writer.lock").open("a+b") as stream:
-        try:
-            fcntl.flock(stream.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError as exc:
-            raise ValueError("another reference writer owns this output directory") from exc
-        try:
+        if fcntl is not None:
+            try:
+                fcntl.flock(stream.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError as exc:
+                raise ValueError("another reference writer owns this output directory") from exc
+            try:
+                yield
+            finally:
+                fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
+        elif msvcrt is not None:
+            try:
+                msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
+            except (BlockingIOError, OSError) as exc:
+                raise ValueError("another reference writer owns this output directory") from exc
+            try:
+                yield
+            finally:
+                try:
+                    stream.seek(0)
+                    msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
+                except OSError:
+                    pass
+        else:
             yield
-        finally:
-            fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
 
 
 def runtime_identity(device: str = "cpu") -> dict[str, Any]:
@@ -368,6 +394,19 @@ def _atomic_symlink(path: Path, target: str) -> None:
         temporary.symlink_to(target)
         os.replace(temporary, path)
         fsync_dir(path.parent)
+        return
+    except (OSError, PermissionError):
+        target_path = (path.parent / target).resolve()
+        if target_path.is_dir():
+            if path.is_symlink() or path.is_file():
+                path.unlink(missing_ok=True)
+            elif path.is_dir():
+                shutil.rmtree(path, ignore_errors=True)
+            shutil.copytree(target_path, path, dirs_exist_ok=True)
+        elif target_path.is_file():
+            if path.is_symlink() or path.is_file():
+                path.unlink(missing_ok=True)
+            shutil.copyfile(target_path, path)
     finally:
         temporary.unlink(missing_ok=True)
 
@@ -379,10 +418,14 @@ def repair_mirrors(output: Path, current: Path, selection: Any) -> None:
         if manifest["identity"] != read_json(current / "manifest.json")["identity"]:
             raise ValueError("best generation identity mismatch")
         _atomic_symlink(output / "best", str(best.relative_to(output)))
-    # Existing mirrors already follow this one atomic directory switch.
     _atomic_symlink(output / ".reference-latest", str(current.relative_to(output)))
     for name in MIRRORS:
-        path = output / name
-        target = f".reference-latest/{name}"
-        if not path.is_symlink() or os.readlink(path) != target:
-            _atomic_symlink(path, target)
+        src = current / name
+        dst = output / name
+        if src.is_file():
+            try:
+                if dst.is_symlink() or dst.is_file():
+                    dst.unlink(missing_ok=True)
+                shutil.copyfile(src, dst)
+            except OSError:
+                pass

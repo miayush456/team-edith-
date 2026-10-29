@@ -23,6 +23,11 @@ try:  # The supported prototype platform is POSIX/Linux.
 except ImportError:  # pragma: no cover - exercised only on non-POSIX hosts.
     fcntl = None  # type: ignore[assignment]
 
+try:
+    import msvcrt
+except ImportError:
+    msvcrt = None
+
 
 SCHEMA_VERSION = 1
 DEFAULT_MAX_RETRAINS = 12
@@ -71,19 +76,31 @@ def _path_for(path: str | os.PathLike[str]) -> Path:
 
 @contextmanager
 def _exclusive_lock(path: Path) -> Iterator[None]:
-    if fcntl is None:
-        raise ClientTrainingBudgetError("client training cap requires POSIX file locking")
     lock_path = Path(f"{path}.lock")
     lock_path.parent.mkdir(parents=True, exist_ok=True)
-    fd = os.open(lock_path, os.O_RDWR | os.O_CREAT, 0o600)
-    try:
-        fcntl.flock(fd, fcntl.LOCK_EX)
-        yield
-    finally:
+    if fcntl is not None:
+        fd = os.open(lock_path, os.O_RDWR | os.O_CREAT, 0o600)
         try:
-            fcntl.flock(fd, fcntl.LOCK_UN)
+            fcntl.flock(fd, fcntl.LOCK_EX)
+            yield
         finally:
-            os.close(fd)
+            try:
+                fcntl.flock(fd, fcntl.LOCK_UN)
+            finally:
+                os.close(fd)
+    elif msvcrt is not None:
+        fd = os.open(lock_path, os.O_RDWR | os.O_CREAT)
+        try:
+            msvcrt.locking(fd, msvcrt.LK_LOCK, 1)
+            yield
+        finally:
+            try:
+                os.lseek(fd, 0, os.SEEK_SET)
+                msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+            finally:
+                os.close(fd)
+    else:
+        yield
 
 
 def _atomic_write(path: Path, value: dict[str, Any]) -> None:
