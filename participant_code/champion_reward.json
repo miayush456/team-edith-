@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "weights": {
+    "progress": 15.0,
+    "speed": 1.0,
+    "curvature_matched_speed": 0.85,
+    "off_track": -3.5,
+    "crash": -25.0,
+    "stuck": -15.0,
+    "lap_complete": 50.0,
+    "checkpoint": 2.5,
+    "time": -0.20,
+    "steer_smoothness": -0.15
+  }
+}
