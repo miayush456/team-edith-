@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SYNAPSE 2.5D Race Renderer — F1 Broadcast</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Loading overlay -->
+  <div id="loading-overlay">
+    <div class="loader-container">
+      <div class="loader-ring"></div>
+      <div class="loader-text">SYNAPSE</div>
+      <div class="loader-sub" id="load-status">Loading race telemetry…</div>
+    </div>
+  </div>
+
+  <!-- File picker modal -->
+  <div id="file-picker" style="display:none;">
+    <div class="picker-card">
+      <div class="picker-badge">FORMULA SYNAPSE</div>
+      <h1>2.5D CHASE <span class="accent">VIEWER</span></h1>
+      <p>Synchronous head-to-head 2.5D broadcast renderer for SYNAPSE RL racers.</p>
+
+      <div class="quick-launch-box">
+        <button id="btn-quick-load" class="primary-btn pulse">⚡ Quick Launch Built-in Race</button>
+        <div class="picker-divider"><span>OR CONNECT TO LIVE PYTHON RACE</span></div>
+        <div class="live-connect-row">
+          <input id="live-url" type="url" value="ws://127.0.0.1:8766/live/v1" aria-label="Live WebSocket URL" />
+          <button id="btn-live-connect" class="action-btn">Connect Live</button>
+        </div>
+        <div class="picker-divider"><span>OR SELECT REPLAY FILES</span></div>
+      </div>
+
+      <div class="picker-row">
+        <label for="file-a" class="picker-label cyan">RACER A</label>
+        <input type="file" id="file-a" accept=".json" />
+      </div>
+      <div class="picker-row">
+        <label for="file-b" class="picker-label gold">RACER B</label>
+        <input type="file" id="file-b" accept=".json" />
+      </div>
+      <div class="picker-actions">
+        <button id="btn-load" class="action-btn" disabled>Launch Selected Replays</button>
+        <button id="btn-close-picker" class="cancel-btn" style="display:none;">Cancel</button>
+      </div>
+      <div id="picker-error" class="picker-error"></div>
+    </div>
+  </div>
+
+  <!-- 3D canvas (Three.js WebGL) -->
+  <canvas id="race-canvas"></canvas>
+
+  <!-- Notification Banner (Collisions, Overtakes, Finish) -->
+  <div id="broadcast-alert" class="broadcast-alert hidden">
+    <span class="alert-icon">⚡</span>
+    <span class="alert-text" id="alert-text">GREEN FLAG — RACE STARTED</span>
+  </div>
+
+  <!-- Winner Victory Podium Modal -->
+  <div id="winner-modal" class="winner-modal hidden">
+    <div class="winner-card">
+      <div class="winner-header">
+        <div class="winner-tag">🏁 CHECKERED FLAG</div>
+        <button id="btn-close-winner" class="close-card-btn" title="Close and review race">✕</button>
+      </div>
+
+      <div class="podium-hero">
+        <div class="trophy-badge">🏆 P1 WINNER</div>
+        <div class="winner-name" id="winner-name">RACER ALPHA</div>
+        <div class="winner-time-box">
+          <span class="time-label">RACE TIME</span>
+          <span class="time-val" id="winner-time-val">00:28.767</span>
+        </div>
+      </div>
+
+      <div class="podium-table">
+        <div class="podium-row p1">
+          <span class="pod-rank p1-badge">P1</span>
+          <span class="pod-indicator cyan-bg" id="winner-p1-ind"></span>
+          <span class="pod-driver" id="pod-p1-name">RACER ALPHA</span>
+          <span class="pod-gap" id="pod-p1-gap">LEADER</span>
+        </div>
+        <div class="podium-row p2">
+          <span class="pod-rank p2-badge">P2</span>
+          <span class="pod-indicator gold-bg" id="winner-p2-ind"></span>
+          <span class="pod-driver" id="pod-p2-name">RACER BETA</span>
+          <span class="pod-gap" id="pod-p2-gap">+0.00s</span>
+        </div>
+      </div>
+
+      <div class="winner-actions">
+        <button id="btn-replay-winner" class="winner-btn primary">⏮ Replay Race</button>
+        <button id="btn-switch-track-winner" class="winner-btn accent">🏎️ Next Track: Flowing</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top-Left: F1 Live Timing Tower -->
+  <div id="hud-top-left" class="hud-panel">
+    <div class="timing-tower">
+      <div class="tower-header">
+        <span class="live-dot"></span>
+        <span class="tower-title">SYNAPSE GP</span>
+        <span class="tower-lap" id="tower-lap">LAP 1/1</span>
+        <span class="tower-sector" id="tower-sector">SEC 1</span>
+        <span class="tower-session" id="tower-session">RACE</span>
+      </div>
+      
+      <div id="overlap-indicator" class="overlap-badge hidden">
+        <span class="pulse-icon">⚡</span> X-RAY OVERLAP MODE
+      </div>
+
+      <div class="timing-row p1" id="row-p1">
+        <span class="pos-badge">P1</span>
+        <span class="driver-indicator cyan-bg" id="p1-indicator"></span>
+        <span class="driver-name" id="p1-name">RACER ALPHA</span>
+        <span class="driver-gap" id="p1-gap">LEADER</span>
+      </div>
+      <div class="timing-row p2" id="row-p2">
+        <span class="pos-badge">P2</span>
+        <span class="driver-indicator gold-bg" id="p2-indicator"></span>
+        <span class="driver-name" id="p2-name">RACER BETA</span>
+        <span class="driver-gap" id="p2-gap">+0.00s</span>
+      </div>
+      <div class="tower-footer">
+        <div class="progress-track">
+          <div class="progress-bar" id="race-progress-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top-Right: Radar Minimap & Track Switcher -->
+  <div id="hud-top-right" class="hud-panel">
+    <div class="minimap-container">
+      <div class="minimap-header">
+        <span>RADAR TRACKER</span>
+        <span class="track-tag" id="track-name-tag">CIRCUIT OVAL</span>
+      </div>
+      <canvas id="minimap-canvas" width="220" height="220"></canvas>
+      <div class="minimap-legend">
+        <span class="legend-item"><span class="legend-dot cyan-glow"></span> Car A</span>
+        <span class="legend-item"><span class="legend-dot gold-glow"></span> Car B</span>
+        <span class="legend-item"><span class="legend-dot cone-glow"></span> Cam FOV</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Playback Control Bar (Clean 2-Row Layout) -->
+  <div id="hud-bottom" class="hud-panel">
+    <div class="playback-bar">
+      <!-- Row 1: Full-width Scrubber & Time -->
+      <div class="scrubber-row">
+        <span id="time-current" class="time-digit">00:00.000</span>
+        <div class="scrubber-track-wrap">
+          <input type="range" id="scrubber" min="0" max="1000" value="0" step="1" />
+        </div>
+        <span id="time-total" class="time-digit">00:00.000</span>
+      </div>
+
+      <!-- Row 2: Transport, Speeds, Cameras, Track Switcher, Options -->
+      <div class="actions-row">
+        <div class="control-group transport-group">
+          <button id="btn-restart" class="ctrl-btn" title="Restart (R)">⏮</button>
+          <button id="btn-step-back" class="ctrl-btn step" title="Step Back 1s ([)">-1s</button>
+          <button id="btn-play" class="ctrl-btn play" title="Play/Pause (Space)">▶</button>
+          <button id="btn-step-fwd" class="ctrl-btn step" title="Step Forward 1s (])">+1s</button>
+        </div>
+
+        <div class="control-group speed-group">
+          <button class="speed-btn" data-speed="0.5">0.5×</button>
+          <button class="speed-btn active" data-speed="1">1×</button>
+          <button class="speed-btn" data-speed="2">2×</button>
+          <button class="speed-btn" data-speed="4">4×</button>
+        </div>
+
+        <div class="control-group cam-group">
+          <button class="cam-btn active" data-cam="battle" title="Battle Chase Cam [1]">Battle</button>
+          <button class="cam-btn" data-cam="carA" title="Car A Chase [2]">Car A</button>
+          <button class="cam-btn" data-cam="carB" title="Car B Chase [3]">Car B</button>
+          <button class="cam-btn" data-cam="cockpit" title="Nose Cockpit Cam [4]">Cockpit</button>
+          <button class="cam-btn" data-cam="top" title="Drone Overview [5]">Top</button>
+        </div>
+
+        <div class="control-group aux-group">
+          <button id="btn-lanes" class="toggle-btn active" title="Toggle Side-by-Side Dual Lane (L)">Lanes: Dual</button>
+          <select id="track-switcher" class="track-select" title="Switch Circuit">
+            <option value="oval">🏁 Oval</option>
+            <option value="flowing">🏁 Flowing</option>
+            <option value="tight">🏁 Tight Loop</option>
+          </select>
+          <button id="btn-open-picker" class="toggle-btn" title="Load Custom Replay JSONs">📂 Load</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom-Left: Racer A Telemetry Panel -->
+  <div id="telemetry-a" class="telemetry-panel left">
+    <div class="telem-header cyan">
+      <span class="telem-badge cyan-bg">A</span>
+      <span class="telem-driver-title" id="telem-name-a">RACER ALPHA</span>
+      <span class="telem-gear" id="gear-a">G5</span>
+      <span class="telem-g" id="gforce-a">0.0 G</span>
+    </div>
+    <div class="telem-speed">
+      <span id="speed-a" class="speed-num">0</span>
+      <span class="speed-unit">KM/H</span>
+      <span class="steer-angle-val" id="steer-val-a">+0.0°</span>
+    </div>
+    <div class="telem-bars">
+      <div class="bar-row">
+        <span class="bar-label">THR</span>
+        <div class="bar-track"><div class="bar-fill throttle" id="throttle-a"></div></div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">BRK</span>
+        <div class="bar-track"><div class="bar-fill brake" id="brake-a"></div></div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">STR</span>
+        <div class="bar-track steer-track"><div class="bar-fill steer" id="steer-a"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom-Right: Racer B Telemetry Panel -->
+  <div id="telemetry-b" class="telemetry-panel right">
+    <div class="telem-header gold">
+      <span class="telem-badge gold-bg">B</span>
+      <span class="telem-driver-title" id="telem-name-b">RACER BETA</span>
+      <span class="telem-gear" id="gear-b">G5</span>
+      <span class="telem-g" id="gforce-b">0.0 G</span>
+    </div>
+    <div class="telem-speed">
+      <span id="speed-b" class="speed-num">0</span>
+      <span class="speed-unit">KM/H</span>
+      <span class="steer-angle-val" id="steer-val-b">+0.0°</span>
+    </div>
+    <div class="telem-bars">
+      <div class="bar-row">
+        <span class="bar-label">THR</span>
+        <div class="bar-track"><div class="bar-fill throttle" id="throttle-b"></div></div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">BRK</span>
+        <div class="bar-track"><div class="bar-fill brake" id="brake-b"></div></div>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">STR</span>
+        <div class="bar-track steer-track"><div class="bar-fill steer" id="steer-b"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Three.js ES Module Map -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

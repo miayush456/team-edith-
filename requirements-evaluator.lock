@@ -1,0 +1,11 @@
+# CPU-only model worker. No participant Python, Torch, renderer or trainer.
+numpy==2.4.6
+onnx==1.17.0
+onnxruntime==1.20.1
+protobuf==7.36.2
+coloredlogs==15.0.1
+humanfriendly==10.0
+flatbuffers==25.12.19
+packaging==26.3
+sympy==1.14.0
+mpmath==1.3.0

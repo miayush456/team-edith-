@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">Shape of a participant trainer script</title>
+  <desc id="desc">An annotated Python file is shown with arrows to argument parsing, environment loading, the model loop, and artifact saving.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#ffcc66"/></marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#000" flood-opacity=".3"/></filter>
+  </defs>
+  <rect width="1200" height="720" fill="#10182d"/>
+  <text x="48" y="56" fill="#ffffff" font-family="sans-serif" font-size="30" font-weight="700">A trainer is a normal Python program</text>
+  <text x="48" y="88" fill="#a9b8d4" font-family="sans-serif" font-size="18">The launcher supplies the named arguments. Your script owns the model and update rule.</text>
+  <g filter="url(#shadow)">
+    <rect x="48" y="126" width="650" height="530" rx="16" fill="#0b1120" stroke="#4c78a8" stroke-width="2"/>
+    <rect x="48" y="126" width="650" height="40" rx="16" fill="#263a5d"/>
+    <text x="72" y="153" fill="#e9eefb" font-family="monospace" font-size="17">participant_code/train.py</text>
+    <text x="78" y="205" fill="#72e6a1" font-family="monospace" font-size="16">import argparse</text>
+    <text x="78" y="238" fill="#e9eefb" font-family="monospace" font-size="16">def main():</text>
+    <text x="108" y="271" fill="#e9eefb" font-family="monospace" font-size="16">args = parse_args()</text>
+    <text x="108" y="304" fill="#e9eefb" font-family="monospace" font-size="16">config = load(args.config)</text>
+    <text x="108" y="337" fill="#e9eefb" font-family="monospace" font-size="16">tracks = load_tracks(args.track_dir)</text>
+    <text x="108" y="370" fill="#ffcc66" font-family="monospace" font-size="16">for update in training_loop:</text>
+    <text x="138" y="403" fill="#e9eefb" font-family="monospace" font-size="16">obs = env.reset()</text>
+    <text x="138" y="436" fill="#e9eefb" font-family="monospace" font-size="16">action = model(obs)</text>
+    <text x="138" y="469" fill="#e9eefb" font-family="monospace" font-size="16">batch = collect(obs, action)</text>
+    <text x="138" y="502" fill="#e9eefb" font-family="monospace" font-size="16">optimizer.step(batch)</text>
+    <text x="108" y="548" fill="#e9eefb" font-family="monospace" font-size="16">save_artifact(args.output_dir)</text>
+    <text x="78" y="598" fill="#72e6a1" font-family="monospace" font-size="16">if __name__ == "__main__": main()</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="774" y="136" width="374" height="116" rx="14" fill="#172640" stroke="#4c78a8" stroke-width="2"/>
+    <text x="798" y="171" fill="#ffcc66" font-family="sans-serif" font-size="19" font-weight="700">A · Accept launcher arguments</text>
+    <text x="798" y="204" fill="#a9b8d4" font-family="sans-serif" font-size="16">At minimum: --track-dir, --config,</text>
+    <text x="798" y="228" fill="#a9b8d4" font-family="sans-serif" font-size="16">--output-dir, --steps, --seed.</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="774" y="292" width="374" height="116" rx="14" fill="#172640" stroke="#4c78a8" stroke-width="2"/>
+    <text x="798" y="327" fill="#ffcc66" font-family="sans-serif" font-size="19" font-weight="700">B · Ask Python for data</text>
+    <text x="798" y="360" fill="#a9b8d4" font-family="sans-serif" font-size="16">Do not make the renderer your</text>
+    <text x="798" y="384" fill="#a9b8d4" font-family="sans-serif" font-size="16">physics or scoring authority.</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="774" y="448" width="374" height="116" rx="14" fill="#172640" stroke="#4c78a8" stroke-width="2"/>
+    <text x="798" y="483" fill="#ffcc66" font-family="sans-serif" font-size="19" font-weight="700">C · Save a recognized artifact</text>
+    <text x="798" y="516" fill="#a9b8d4" font-family="sans-serif" font-size="16">Reference: policy.pt + policy.json +</text>
+    <text x="798" y="540" fill="#a9b8d4" font-family="sans-serif" font-size="16">training_contract.json.</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="774" y="604" width="374" height="62" rx="14" fill="#254d48" stroke="#72e6a1" stroke-width="2"/>
+    <text x="798" y="642" fill="#ffffff" font-family="sans-serif" font-size="17">Print update progress so the UI can watch.</text>
+  </g>
+  <path d="M698 220 C730 220 730 194 766 194" fill="none" stroke="#ffcc66" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M698 350 C730 350 730 350 766 350" fill="none" stroke="#ffcc66" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M698 548 C730 548 730 506 766 506" fill="none" stroke="#ffcc66" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M698 598 C730 598 730 635 766 635" fill="none" stroke="#ffcc66" stroke-width="4" marker-end="url(#arrow)"/>
+</svg>

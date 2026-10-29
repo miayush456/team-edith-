@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "racing-event"
+version = "0.1.0"
+description = "Python-authoritative reinforcement-learning racing event prototype"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+  "numpy>=1.24,<3",
+  "pygame>=2.6,<2.7",
+  "torch>=2.7,<2.8",
+]
+
+[project.optional-dependencies]
+submission = ["onnx==1.17.0", "onnxruntime==1.20.1"]
+live = ["onnx==1.17.0", "onnxruntime==1.20.1", "websockets==15.0.1"]
+
+[tool.setuptools.packages.find]
+include = ["racing_event*", "synapse*"]
+
+[tool.setuptools.package-data]
+racing_event = ["assets/*.html", "assets/*.css", "assets/*.js"]

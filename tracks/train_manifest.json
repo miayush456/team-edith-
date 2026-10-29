@@ -1,0 +1,46 @@
+{
+  "environment": {
+    "config_hash": "06908c903ce74ed20031e5e9409660e5dd98ed3e075fda7ed673e5b976615c22",
+    "observation_size": 23,
+    "ray_angles_deg": [
+      0.0,
+      -15.0,
+      15.0,
+      -30.0,
+      30.0,
+      -60.0,
+      60.0,
+      -90.0,
+      90.0
+    ],
+    "ray_count": 9
+  },
+  "manifest_version": "1",
+  "maps": [
+    {
+      "canonical_content_hash": "05fb50b6fa858ae9e337a2ae5587b3d7a2fe3dc95496045df0eb2e54635bb9a7",
+      "delivered_file_sha256": "624f51a008c2d860ceac86d86899b9a69a659c97b38cf7d3999de205d62b166d",
+      "display_name": "Monaco",
+      "geometry_version": "1.0",
+      "map_id": "monaco",
+      "source_note": "Derived from the public Circuit de Monaco, current Grand Prix layout centerline in bacinger/f1-circuits (MIT); resampled, scaled, and bounded by SYNAPSE.",
+      "split": "train",
+      "units": "metres",
+      "validator": "TrackGeometry.validate"
+    },
+    {
+      "canonical_content_hash": "3b1a56f3dc3a6229e07850a56b64902a728de9dfa17ffe77b266fa93f7a562e9",
+      "delivered_file_sha256": "3042d17ecf91e507bd22247087c7be967c226bca0d5e23a8f3ab3452ccd4e061",
+      "display_name": "Spa-Francorchamps",
+      "geometry_version": "1.0",
+      "map_id": "spa",
+      "source_note": "Derived from the public Circuit de Spa-Francorchamps, current Grand Prix layout centerline in bacinger/f1-circuits (MIT); resampled, scaled, and bounded by SYNAPSE.",
+      "split": "train",
+      "units": "metres",
+      "validator": "TrackGeometry.validate"
+    }
+  ],
+  "private_tracks_included": false,
+  "release_id": "synapse-local-participant-prototype",
+  "split": "train"
+}

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" role="img" aria-labelledby="title desc">
+  <title id="title">Participant first-run map</title>
+  <desc id="desc">A terminal command points at a participant trainer script, public maps, and an output folder. Arrows show the resulting training run.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#10182d"/><stop offset="1" stop-color="#182642"/></linearGradient>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#ffcc66"/></marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#000" flood-opacity=".3"/></filter>
+  </defs>
+  <rect width="1200" height="700" fill="url(#bg)"/>
+  <text x="54" y="64" fill="#ffffff" font-family="sans-serif" font-size="32" font-weight="700">Your first training run</text>
+  <text x="54" y="96" fill="#a9b8d4" font-family="sans-serif" font-size="18">The command is a form: point each named input at the right folder or file.</text>
+
+  <g filter="url(#shadow)">
+    <rect x="54" y="142" width="1092" height="180" rx="18" fill="#0b1120" stroke="#3c5278" stroke-width="2"/>
+    <rect x="54" y="142" width="1092" height="36" rx="18" fill="#263a5d"/>
+    <circle cx="80" cy="160" r="6" fill="#ff6b6b"/><circle cx="101" cy="160" r="6" fill="#ffd166"/><circle cx="122" cy="160" r="6" fill="#72e6a1"/>
+    <text x="78" y="216" fill="#72e6a1" font-family="monospace" font-size="17">$ .venv/bin/python tools/train_participant.py \</text>
+    <text x="112" y="245" fill="#e9eefb" font-family="monospace" font-size="17">--trainer participant_code/train.py \</text>
+    <text x="112" y="274" fill="#e9eefb" font-family="monospace" font-size="17">--track-dir tracks/train --output-dir runs/first \</text>
+    <text x="112" y="303" fill="#e9eefb" font-family="monospace" font-size="17">--steps 256 --budget-steps 10000</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="54" y="390" width="318" height="190" rx="16" fill="#172640" stroke="#4c78a8" stroke-width="2"/>
+    <text x="80" y="432" fill="#ffcc66" font-family="sans-serif" font-size="20" font-weight="700">1 · Trainer script</text>
+    <text x="80" y="464" fill="#e9eefb" font-family="monospace" font-size="16">participant_code/</text>
+    <text x="80" y="491" fill="#e9eefb" font-family="monospace" font-size="16">  train.py</text>
+    <text x="80" y="532" fill="#a9b8d4" font-family="sans-serif" font-size="15">Your model and learning loop live here.</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="441" y="390" width="318" height="190" rx="16" fill="#172640" stroke="#4c78a8" stroke-width="2"/>
+    <text x="467" y="432" fill="#ffcc66" font-family="sans-serif" font-size="20" font-weight="700">2 · Public maps</text>
+    <text x="467" y="464" fill="#e9eefb" font-family="monospace" font-size="16">tracks/train/</text>
+    <text x="467" y="491" fill="#e9eefb" font-family="monospace" font-size="16">  monaco.json</text>
+    <text x="467" y="518" fill="#e9eefb" font-family="monospace" font-size="16">  spa.json</text>
+    <text x="467" y="552" fill="#a9b8d4" font-family="sans-serif" font-size="15">The launcher reads every JSON map here.</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="828" y="390" width="318" height="190" rx="16" fill="#172640" stroke="#4c78a8" stroke-width="2"/>
+    <text x="854" y="432" fill="#ffcc66" font-family="sans-serif" font-size="20" font-weight="700">3 · Saved run</text>
+    <text x="854" y="464" fill="#e9eefb" font-family="monospace" font-size="16">runs/first/</text>
+    <text x="854" y="491" fill="#e9eefb" font-family="monospace" font-size="16">  policy.pt</text>
+    <text x="854" y="518" fill="#e9eefb" font-family="monospace" font-size="16">  training_contract.json</text>
+    <text x="854" y="552" fill="#a9b8d4" font-family="sans-serif" font-size="15">Weights, metadata, and measurements.</text>
+  </g>
+  <path d="M220 322 C220 352 214 360 214 385" fill="none" stroke="#ffcc66" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M600 322 C600 352 600 360 600 385" fill="none" stroke="#ffcc66" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M980 322 C980 352 980 360 980 385" fill="none" stroke="#ffcc66" stroke-width="4" marker-end="url(#arrow)"/>
+  <text x="54" y="640" fill="#a9b8d4" font-family="sans-serif" font-size="18">Tip: run commands from the repository root so these relative paths point to the right places.</text>
+</svg>

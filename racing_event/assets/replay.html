@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>SYNAPSE · Recorded replay</title>
+  <style>/*__REPLAY_CSS__*/</style>
+</head>
+<body>
+  <main class="replay-shell">
+    <header class="masthead">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">S/</span> SYNAPSE <span class="edition">REPLAY LAB</span></div>
+      <span class="read-only"><span aria-hidden="true">●</span> RECORDED / READ ONLY</span>
+    </header>
+
+    <section class="run-heading" aria-labelledby="track-name">
+      <div>
+        <p class="eyebrow">TELEMETRY REPLAY <span aria-hidden="true">/</span> <span id="source-mode">—</span></p>
+        <h1 id="track-name">Recorded racing replay</h1>
+        <p class="run-source">Participant <strong id="participant-id">—</strong> <span aria-hidden="true">·</span> Track <span id="track-id">—</span></p>
+      </div>
+      <div class="result-card">
+        <div><span class="eyebrow">RECORDED RESULT</span> <strong id="result-status" class="badge">—</strong></div>
+        <p class="lap-time"><span id="lap-time">—</span><span class="unit">Python lap time</span></p>
+        <p class="result-detail"><span id="result-code">—</span> <span aria-hidden="true">·</span> <span id="result-elapsed">—</span> recorded elapsed</p>
+      </div>
+    </section>
+
+    <div id="replay-error" class="error-panel" role="alert" hidden>
+      <h2>Replay unavailable</h2>
+      <p id="error-message">Replay data could not be loaded.</p>
+    </div>
+    <noscript><div class="error-panel">JavaScript is required to view this recorded replay. No network connection is needed.</div></noscript>
+
+    <div class="workspace">
+      <section class="track-panel panel" aria-labelledby="track-view-title">
+        <div class="panel-heading">
+          <h2 id="track-view-title"><span class="section-number">01</span> Track plan</h2>
+          <label class="check-control"><input id="show-centerline" data-control type="checkbox" checked disabled> Centreline</label>
+        </div>
+        <div id="canvas-viewport" class="canvas-viewport">
+          <canvas id="track-canvas" width="960" height="600" role="img" aria-label="Top-down track plan and recorded car position" aria-describedby="canvas-description">Your browser cannot display the track canvas. Recorded telemetry is available in the adjacent panel.</canvas>
+          <div class="view-tag" aria-hidden="true">PLAN VIEW <span>METRES / +Y UP</span></div>
+        </div>
+        <div class="track-legend" aria-label="Track legend">
+          <span><i class="legend-line car-line" aria-hidden="true"></i> Recorded path</span>
+          <span><i class="legend-line barrier-line" aria-hidden="true"></i> Barrier</span>
+          <span><i class="legend-car" aria-hidden="true"></i> Car · nose points forward</span>
+        </div>
+        <p id="canvas-description" class="panel-note">Full-track view, equal scale on both axes. Only the recorded car pose is visually interpolated; telemetry uses completed ticks.</p>
+      </section>
+
+      <aside class="telemetry-panel panel" aria-labelledby="telemetry-title">
+        <div class="panel-heading"><h2 id="telemetry-title"><span class="section-number">02</span> Recorded telemetry</h2></div>
+        <div class="speed-readout"><p class="eyebrow">SPEED</p><p><strong id="speed-kmh">—</strong> <span>km/h</span></p><p class="secondary-speed"><span id="speed-ms">—</span> m/s</p></div>
+        <div class="telemetry-content">
+          <div class="surface-row"><span>Track state</span><strong id="off-track" class="badge">—</strong></div>
+          <dl class="telemetry-grid">
+            <div><dt>Steer angle</dt><dd><span id="steer-angle">—</span> <small>rad</small></dd></div>
+            <div><dt>Steer command</dt><dd id="steering-command">—</dd></div>
+            <div><dt>Lateral velocity</dt><dd><span id="lateral-velocity">—</span> <small>m/s</small></dd></div>
+            <div><dt>Yaw rate</dt><dd><span id="yaw-rate">—</span> <small>rad/s</small></dd></div>
+          </dl>
+          <div class="input-channel"><div><span>Throttle / brake</span><strong id="throttle-value">—</strong></div><div class="input-meter" aria-hidden="true"><span id="throttle-fill"></span></div><p><span>−1 brake</span><span>+1 throttle</span></p></div>
+          <div class="recorded-flags"><span id="terminated-flag">Terminated: —</span><span id="truncated-flag">Truncated: —</span></div>
+          <div class="events"><h3>Events at this tick</h3><p id="frame-events">—</p></div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="transport panel" aria-labelledby="playback-title">
+      <div class="transport-heading">
+        <h2 id="playback-title"><span class="section-number">03</span> Playback</h2>
+        <span id="playback-status" class="playback-status" role="status" aria-live="polite">Loading recording</span>
+      </div>
+      <div class="timeline-heading"><label for="scrubber">Simulation time <strong id="simulation-time">—</strong><span class="time-total"> / <span id="duration">—</span></span></label><span class="tick-readout">Tick <strong id="current-tick">—</strong> / <span id="total-ticks">—</span> <span aria-hidden="true">·</span> <span id="tick-hz">—</span> Hz</span></div>
+      <input id="scrubber" class="scrubber" data-control type="range" min="0" max="0" step="any" value="0" aria-describedby="scrubber-help" disabled>
+      <div class="event-rail" aria-label="Recorded event timeline">
+        <div class="event-rail-heading"><span>Recorded events</span><span id="event-count">—</span></div>
+        <div id="event-markers" class="event-markers" role="list" aria-label="Recorded event markers"></div>
+        <div class="event-nav"><span id="event-status" class="event-status" role="status" aria-live="polite">Loading event markers</span><span class="event-nav-buttons"><button id="previous-event" data-control type="button" disabled>‹ Previous event</button><button id="next-event" data-control type="button" disabled>Next event ›</button></span></div>
+      </div>
+      <div class="transport-controls">
+        <div class="buttons">
+          <button id="play-pause" class="primary-button" data-control type="button" aria-pressed="false" disabled><span id="play-icon" aria-hidden="true">▶</span> <span id="play-label">Play</span></button>
+          <button id="restart" data-control type="button" disabled><span aria-hidden="true">↺</span> Restart</button>
+          <button id="next-tick" data-control type="button" disabled><span aria-hidden="true">▹|</span> Next tick</button>
+        </div>
+        <label class="speed-control" for="playback-speed">Playback speed <select id="playback-speed" data-control disabled><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select></label>
+      </div>
+      <p id="scrubber-help" class="panel-note">Drag or use the arrow keys to seek. Next tick pauses playback; at the end, it returns to tick 0. Recordings stop at their final frame.</p>
+      <details id="keyboard-help" class="keyboard-help"><summary>Keyboard help</summary><p><kbd>Space</kbd> play or pause · <kbd>←</kbd>/<kbd>→</kbd> one tick · <kbd>Shift</kbd> + arrow one second · <kbd>Page Up</kbd>/<kbd>Page Down</kbd> ten seconds · <kbd>Home</kbd>/<kbd>End</kbd> endpoints · <kbd>[</kbd>/<kbd>]</kbd> playback speed · <kbd>R</kbd> restart.</p></details>
+    </section>
+
+    <footer class="replay-footer">
+      <p>Python is authoritative. This viewer displays recorded states and recorded results.</p>
+      <details class="provenance"><summary>Recording provenance</summary><dl><div><dt>Engine code</dt><dd id="code-hash">—</dd></div><div><dt>Engine config</dt><dd id="config-hash">—</dd></div><div><dt>Track content</dt><dd id="track-hash">—</dd></div><div><dt>Trajectory</dt><dd id="trajectory-hash">—</dd></div><div><dt>Payload</dt><dd id="payload-hash">—</dd></div><div><dt>Recorded steps</dt><dd id="result-steps">—</dd></div></dl></details>
+    </footer>
+  </main>
+  <!--__REPLAY_DATA__-->
+  <script>/*__REPLAY_JS__*/</script>
+</body>
+</html>

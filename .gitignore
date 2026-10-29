@@ -1,0 +1,21 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+*.egg-info/
+.venv/
+budget-state*.json
+budget-state*.json.lock
+/artifacts/
+/.synapse/
+# Participant-owned runs are local experiment state, not release fixtures.
+/participant_run/
+# Local dashboard snapshots and participant-only scratch output.
+/ui-run/
+# Local test/coverage/log output.
+*.log
+.coverage
+coverage.xml
+htmlcov/
+research_notes/
+RACING_EVENT_Agent_Handoff.md
