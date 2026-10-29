@@ -23,9 +23,11 @@ import torch
 from racing_event.config import SimulationConfig
 from racing_event.observation import TrainingContract
 from racing_event.ppo import FixedMLPActorCritic, PPOHyperparameters
+from racing_event.participant_model import build_policy_from_model
 from racing_event.track import TrackGeometry
 from racing_event.env import RacingEnv
 from tools.run_scripted import scripted_action
+import shutil
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -39,6 +41,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--epochs", type=int, default=80)
     parser.add_argument("--samples-per-track", type=int, default=1200)
     parser.add_argument("--seed", type=int, default=17)
+    parser.add_argument("--model", type=Path, default=None, help="participant model.py to train via imitation")
     return parser.parse_args()
 
 
@@ -72,7 +75,10 @@ def train(args: argparse.Namespace) -> dict[str, object]:
         raise ValueError("no training tracks found")
     tracks = tuple(TrackGeometry.from_file(path) for path in track_paths)
     observations, actions = collect_teacher_data(track_paths, config, args.samples_per_track)
-    policy = FixedMLPActorCritic(observations.shape[1])
+    if args.model:
+        policy, _ = build_policy_from_model(args.model, observations.shape[1])
+    else:
+        policy = FixedMLPActorCritic(observations.shape[1])
     optimizer = torch.optim.Adam(policy.parameters(), lr=3.0e-4)
     inputs = torch.as_tensor(observations, dtype=torch.float32)
     target = torch.atanh(torch.as_tensor(actions, dtype=torch.float32).clamp(-0.995, 0.995))
@@ -103,8 +109,11 @@ def train(args: argparse.Namespace) -> dict[str, object]:
     hyperparameters = PPOHyperparameters(rollout_length=64)
     policy.save_artifact(output_dir / "policy.pt", output_dir / "policy.json", hyperparameters=hyperparameters)
     contract.save(output_dir / "training_contract.json")
+    if args.model:
+        shutil.copyfile(args.model, output_dir / "model_source.py")
+    shutil.copyfile(args.config, output_dir / "run_config.json")
     report = {
-        "architecture": "fixed_mlp_actor_critic",
+        "architecture": "participant_model" if args.model else "fixed_mlp_actor_critic",
         "teacher": "tools.run_scripted.scripted_action",
         "tracks": [track.track_id for track in tracks],
         "samples": len(observations),
